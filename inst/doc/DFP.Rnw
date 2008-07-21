@@ -1,0 +1,197 @@
+%\VignetteIndexEntry{Howto: Discriminat Fuzzy Pattern}
+%\VignetteKeywords{manip}
+%\VignetteDepends{Biobase, methods, tools, utils}
+%\VignettePackage{DFP}
+\documentclass[a4paper]{article}
+
+\textwidth=6in
+\textheight=8.5in
+\oddsidemargin=.2in
+\evensidemargin=.2in
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+
+\author{
+Rodrigo Alvarez-Gonzalez, Daniel Glez-Pena, Fernando Diaz, Florentino Fdez-Riverola
+}
+
+\begin{document}
+
+\title{Discriminant Fuzzy Pattern to Filter Differentially Expressed Genes}
+\maketitle
+\tableofcontents
+\section{Overview}
+The advent of DNA microarray technology has supplied a large volume of data to many fields like machine learning and data mining. Intelligent support is essential for managing and interpreting this great amount of information. One of the well-known constraints specifically related to microarray data is the large number of genes in comparison with the small number of available experiments. In this context, the ability of design methods capable of overcoming current limitations of state-of-the-art algorithms is crucial to the development of successful applications. In this work we demonstrate how a supervised fuzzy pattern algorithm can be used to perform DNA microarray data reduction over real data [1]. The benefits of our method can be employed to find biologically significant insights relating to meaningful genes in order to improve previous successful techniques.
+
+Classical gene selection methods tend to identify differentially expressed genes from a set of microarray experiments. These genes are expected to be up- or down-regulated between healthy and diseased tissues or, more generally, between different classes. A differentially expressed gene is a gene which has the same expression pattern for all samples of the same class, but different for samples belonging to different classes. The relevance value of a gene depends on its ability to be differentially expressed. However, a non-differentially expressed gene will be considered irrelevant and will be removed from a classification process even though it might well contain information that would improve classification accuracy. One way or another, the selected method has to pursue two main goals: (i) reduce the cost and complexity of the classifier and (ii) improve the accuracy of the model.
+
+These methods rank genes depending on their relevance for discrimination. Then by setting a threshold, one can filter the less relevant genes among those considered. As such, these filtering methods may be seen as particular gene selection methods. An important task in microarray data analysis is therefore to identify genes, which are differentially expressed in this way. Statistical analysis of gene expression data relating to complex diseases is of course not really expected to yield accurate results. A realistic goal is to narrow the field for further analysis, to give geneticists a short list of genes for analysis into which hard-won funds are worth investing.
+
+\section{Gene Selection Using Fuzzy Pattern}
+This work proposes a method for selecting genes which is based on the notion of fuzzy pattern [1,2]. Briefly, given a set of microarrays which are well classified, for each class it can be constructed a fuzzy pattern (FP) from the fuzzy microarray descriptor (FMD) associated to each one of the microarrays. The FMD is a comprehensible description for each gene in terms of one from the following linguistic labels: 'Low', 'Medium' and 'High'. Therefore, the fuzzy pattern is a prototype of the FMDs belonging to the same class where the membership criterion of each gene to the fuzzy pattern of the class is frequency-based. Obviously, this fact can be of interest, if the set of initial observations are considered of the same class. The pattern's quality of fuzziness is given by the fact that the selected labels come from the linguistic labels defined during the transformation into FMD of an initial observation. Moreover, if a specific label of one feature is very common in all the examples belonging to the same class, this feature is selected to be included in the pattern.
+
+The goal of gene selection in this work is to determine a reduced set of genes, which are useful to classify new cases within one of the known classes [3]. For each class it is possible to compute a fuzzy pattern from the available data. Since each pattern is representative of a collection of microarrays belonging to the same class, we can assume that the genes included in a pattern, are significant to the classification of any novel case within the class associated with that pattern. Now we are interested in those genes that allow us to discriminate the new case from one class with regard to the others. Here we introduce the notion of discriminant fuzzy pattern (DFP) with regard to a collection of fuzzy patterns. A DFP version of a FP only includes those genes that can serve to differentiate it from the rest of the patterns. The algorithm used to compute the DFP version of each FP in a collection of fuzzy patterns is shown in the following pseudo code.
+
+\verb+procedure discriminantFuzzyPattern (input: ListFP; output: ListDFP) {+
+
+\verb+  begin+
+
+\verb+    initialize_DFP: FP <- + \ensuremath{\phi}
+
+\verb+    for each fuzzy pattern FPi + \ensuremath{\epsilon} \verb+ ListFP do+
+
+\verb+      initialize_DFP: DFPi <- + \ensuremath{\phi}
+
+\verb+      for each fuzzy pattern FPj + \ensuremath{\epsilon} \verb+ ListFP and FPi <> FPj do+
+
+\verb+        for each gen g + \ensuremath{\epsilon} \verb+ getGenes(FPi) do+
+
+\verb+          if (g + \ensuremath{\epsilon} \verb+ getGenes(FPj)) AND+
+
+\verb+            (getLabel(FPi, g) <> getLabel(FPj, g)) then+
+
+\verb+              addMember(DFPi, member(FPi, g)) +
+
+\verb+      add_to_List_of_DFP: add(ListDFP, DFPi)+
+
+\verb+  end+
+
+\verb+}+
+
+As can be observed from the algorithm, the computed DFP for a specific FP is different depending on what other FPs are compared with it. It's not surprising that the genes used to discern a specific class from others (by mean of its DFP) will be different if the set of rival classes also changes.
+
+\section{Examples}
+The DFP package can be used to select significant genes from a microarray experiment. The main function (\Rfunction{discriminantFuzzyPattern}) is parameterized in order to tune the filtering. This algorithm is based on the discretization of float values (gene expression values) stored in an \Robject{ExpressionSet} object into labels combining 'Low', 'Medium' and 'High'.
+
+ \subsection{Quick Start Example}
+<<results=hide>>=
+library(DFP)
+@
+This quick start example will be carried out using the artificial data set \Robject{rmadataset}, included in the package.
+<<>>=
+data(rmadataset)
+# Number of genes in the test set
+length(featureNames(rmadataset))
+@
+Once the data is loaded you can execute the algorithm\footnote{Working with a huge amount of genes (around 20.000) it will take a few minutes}, which will work out with the default parameter values.
+<<>>=
+res <- discriminantFuzzyPattern(rmadataset)
+@
+The selected genes can be shown in both text and graphical mode using following function:
+<<fig=TRUE>>=
+plotDiscriminantFuzzyPattern(res$discriminant.fuzzy.pattern)
+@
+
+This function plots the Discriminant Fuzzy Pattern of the relevant genes (in rows) for the sample classes (in columns), as well as the impact factor (\Robject{ifs}) which determines if a gene belongs to a Fuzzy Pattern in a class (if its value is higher than the \Robject{piVal} parameter). In the first table, a \Robject{NA} value is shown if the impact factor is lower or equal than the \Robject{piVal} parameter, which points out that the corresponding gene does not pertain to the Fuzzy Pattern of the class.
+
+The relevant genes are those which are present in at least two different Fuzzy Patterns with different linguistic labels.
+
+The plotting in graphical mode, shows the liguistic labels as follows:
+
+\begin{itemize}
+\item 'Low': colour BLUE.
+\item 'Medium': colour GREEN.
+\item 'High': colour RED.
+\end{itemize}
+
+ \subsection{Extended Example}
+<<results=hide>>=
+library(DFP)
+@
+Instead of the \Robject{ExpressionSet} class (\Robject{rmadataset}) which accompanies the package, you can load external data in a predefined CSV format.
+
+First of all, you need to specify the package install directory:
+<<>>=
+dataDir <- system.file("extdata", package="DFP"); dataDir
+@
+Secondly, you need to append the file names containing the data and metadata:
+<<>>=
+fileExprs <- file.path(dataDir, "exprsData.csv"); fileExprs
+filePhenodata <- file.path(dataDir, "pData.csv"); filePhenodata
+@
+Finally, you can use the \Rfunction{readCSV} function to read from a CSV file into an \Robject{ExpressionSet} with annotated metadata:
+<<>>=
+rmadataset <- readCSV(fileExprs, filePhenodata); rmadataset
+@
+The parameters you can use to tune the functionality of the algorithm are the following (initialized to the default value):
+<<>>=
+skipFactor <- 3 # Factor to skip odd values
+zeta <- 0.5 # Threshold used in the membership functions to label the float values with a discrete value
+piVal <- 0.9 # Percentage of values of a class to determine the fuzzy patterns
+overlapping <- 2 # Determines the number of discrete labels
+@
+Once the data and parameters are ready, you can execute the algorithm. In order to understand how the algorithm works, the global task is split into the 4 steps it involves:
+
+- STEP 1: Calculate Membership Functions.
+
+These functions are used in the next step (\Rfunction{discretizeExpressionValues}) to discretize gene expression data.
+<<fig=TRUE>>=
+mfs <- calculateMembershipFunctions(rmadataset, skipFactor); mfs[[1]]
+plotMembershipFunctions(rmadataset, mfs, featureNames(rmadataset)[1:2])
+@
+
+- STEP 2: Discretize Expression Values.
+
+This function converts the gene expression values into linguistic labels.
+<<>>=
+dvs <- discretizeExpressionValues(rmadataset, mfs, zeta, overlapping); dvs[1:4,1:10]
+showDiscreteValues(dvs, featureNames(rmadataset)[1:10],c("healthy", "AML-inv"))
+@
+
+- STEP 3: Calculate Fuzzy Patterns.
+
+This function calculates a Fuzzy Pattern for each category. To do this, a given percentage of the samples belonging to a category must have the same label ('Low', 'Medium' or 'High'). In other case, a \Robject{NA} value is assigned.
+<<>>=
+fps <- calculateFuzzyPatterns(rmadataset, dvs, piVal, overlapping); fps[1:30,]
+showFuzzyPatterns(fps, "healthy")[21:50]
+@
+
+- STEP 4: Calculate Discriminant Fuzzy Pattern.
+
+The Discriminant Fuzzy Pattern (DFP) includes those genes present in two or more FPs with different assigned labels.
+<<fig=TRUE>>=
+dfps <- calculateDiscriminantFuzzyPattern(rmadataset, fps); dfps[1:5,]
+plotDiscriminantFuzzyPattern(dfps, overlapping)
+@
+
+This function plots the Discriminant Fuzzy Pattern of the relevant genes (in rows) for the sample classes (in columns), as well as the impact factor (\Robject{ifs}) which determines if a gene belongs to a Fuzzy Pattern in a class (if its value is higher than the \Robject{piVal} parameter). In the first table, a \Robject{NA} value is shown if the impact factor is lower or equal than the \Robject{piVal} parameter, which points out that the corresponding gene does not pertain to the Fuzzy Pattern of the class.
+
+The relevant genes are those which are present in at least two different Fuzzy Patterns with different linguistic labels.
+
+The plotting in graphical mode, shows the liguistic labels as follows:
+
+\begin{itemize}
+\item 'Low': colour BLUE.
+\item 'Medium': colour GREEN.
+\item 'High': colour RED.
+\end{itemize}
+
+\section{Parameter Settings}
+\begin{itemize}
+\item The \Robject{skipFactor} parameter can take values in the interval [0,). The default value is 3. Higher values imply that less samples of a gene are considered as odd (skipped in the test).
+\item The \Robject{zeta} parameter is the threshold value which controls the activation of a linguistic label ('Low', 'Medium' or 'High'). It can take values in the interval [0,1].
+\item The \Robject{overlapping} parameter can take the following values:
+\begin{enumerate}
+\item The algorithm will use the discrete values (labels) 'Low', 'Medium' and 'High'.
+\item The algorithm will use the discrete values (labels) 'Low', 'Low-Medium', 'Medium', 'Medium-High' and 'High'.
+\item The algorithm will use the discrete values (labels) 'Low', 'Low-Medium', 'Low-Medium-High', 'Medium', 'Medium-High' and 'High'.
+\end{enumerate}
+\item The \Robject{piVal} parameter controls the degree of exigency for selecting a gene as a member of the pattern, since the higher its value, the fewer the number of genes which make up the puttern. It can take values in the interval [0,1]. The default value is 0.9.
+\end{itemize}
+
+\section{Session Information}
+The version number of R and packages loaded for generating the vignette were:
+<<echo=FALSE,results=tex>>=
+toLatex(sessionInfo())
+@
+
+\section{References}
+\begin{enumerate}
+\item F. Diaz, F. Fdez-Riverola, D. Glez-Pena, J. M. Corchado. Using Fuzzy Patterns for Gene Selection and Data Reduction on Microarray Data. 7th International Conference on Intelligent Data Engineering and Automated Learning: IDEAL 2006, (2006) pp. 1095-1102.
+\item F. Fdez-Riverola, F. Diaz, J. M. Corchado, J. M. Hernandez, J. San Miguel: Improving Gene Selection in Microarray Data Analysis using Fuzzy Patterns inside a CBR System. Proc. of the ICCBR 2005 Conference, (2005) 23-26.
+\item F. Diaz, F. Fdez-Riverola, J. M. Corchado: GENE-CBR: a Case-Based Reasoning Tool for Cancer Diagnosis using Microarray Datasets. Computational Intelligence (2006) 22(3-4):254-268.
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,9 @@
+import("methods")
+import("Biobase")
+
+export("discriminantFuzzyPattern","readCSV","plotMembershipFunctions","showDiscreteValues",
+       "showFuzzyPatterns","plotDiscriminantFuzzyPattern","calculateMembershipFunctions","discretizeExpressionValues",
+       "calculateFuzzyPatterns","calculateDiscriminantFuzzyPattern")
+
+exportClasses("ExpressionLevel", "LowExpressionLevel", "MediumExpressionLevel", "HighExpressionLevel")
+exportMethods("show")
