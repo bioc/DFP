@@ -1,14 +1,17 @@
 Package: DFP
 Type: Package
 Title: Gene Selection
-Version: 1.21.1
+Version: 1.21.2
 Date: 2009-07-22
 Author: R. Alvarez-Gonzalez, D. Glez-Pena, F. Diaz, F. Fdez-Riverola
 Maintainer: Rodrigo Alvarez-Glez <rodrigo.djv@uvigo.es>
 Depends: methods, Biobase (>= 2.5.5)
 Collate: AllClasses.R show-methods.R DFP.R
 LazyLoad: Yes
-Description: This package provides a supervised technique able to identify differentially expressed genes, based on the construction of \emph{Fuzzy Patterns} (FPs).
-	The Fuzzy Patterns are built by means of applying 3 Membership Functions to discretized gene expression values.
+Description: This package provides a supervised technique able to
+        identify differentially expressed genes, based on the
+        construction of \emph{Fuzzy Patterns} (FPs). The Fuzzy Patterns
+        are built by means of applying 3 Membership Functions to
+        discretized gene expression values.
 License: GPL-2
-biocViews: Bioinformatics, Microarray, DifferentialExpression
+biocViews: Microarray, DifferentialExpression
