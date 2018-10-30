@@ -1,7 +1,7 @@
 Package: DFP
 Type: Package
 Title: Gene Selection
-Version: 1.40.0
+Version: 1.41.0
 Date: 2009-07-22
 Author: R. Alvarez-Gonzalez, D. Glez-Pena, F. Diaz, F. Fdez-Riverola
 Maintainer: Rodrigo Alvarez-Glez <rodrigo.djv@uvigo.es>
